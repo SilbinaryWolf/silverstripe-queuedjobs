@@ -540,7 +540,7 @@ class QueuedJobService {
 						} catch (Exception $e) {
 							// okay, we'll just catch this exception for now
 							$job->addMessage(sprintf(_t('QueuedJobs.JOB_EXCEPT', 'Job caused exception %s in %s at line %s'), $e->getMessage(), $e->getFile(), $e->getLine()), 'ERROR');
-							SS_Log::log($e, SS_Log::ERR);
+							$errorHandler->handleException($e);
 							$jobDescriptor->JobStatus =  QueuedJob::STATUS_BROKEN;
 						}
 
@@ -604,7 +604,7 @@ class QueuedJobService {
 				}
 			} catch (Exception $e) {
 				// okay, we'll just catch this exception for now
-				SS_Log::log($e, SS_Log::ERR);
+				$errorHandler->handleException($e);
 				$jobDescriptor->JobStatus =  QueuedJob::STATUS_BROKEN;
 				$jobDescriptor->write();
 				$broken = true;
@@ -844,26 +844,47 @@ class JobErrorHandler {
 		restore_error_handler();
 	}
 
-	public function handleError($errno, $errstr, $errfile, $errline) {
-		if (error_reporting()) {
-			// Don't throw E_DEPRECATED in PHP 5.3+
-			if (defined('E_DEPRECATED')) {
-				if ($errno == E_DEPRECATED || $errno = E_USER_DEPRECATED) {
-					return;
-				}
-			}
+	public function handleException($exception) {
+		// Copy-paste from Debug.php's exceptionHandler() without "exit(1)"
+		// at the end.
+		$errno = E_USER_ERROR;
+		$type = get_class($exception);
+		$message = "Uncaught " . $type . ": " . $exception->getMessage();
+		$file = $exception->getFile();
+		$line = $exception->getLine();
+		$context = $exception->getTrace();
+		Debug::fatalHandler($errno, $message, $file, $line, $context);
+	}
 
-			switch ($errno) {
-				case E_NOTICE:
-				case E_USER_NOTICE:
-				case E_STRICT: {
-					break;
-				}
-				default: {
-					throw new Exception($errstr . " in $errfile at line $errline", $errno);
-					break;
-				}
-			}
+	public function handleError($errno, $errstr, $errfile, $errline) {
+		// Copy-paste from Debug.php's errorHandler() without "exit(1)"
+		// for "fatalHandler" errors.
+		//
+		// Keep throw exception so when a job breaks, it handles it somewhat gracefully.
+		//
+		switch($errno) {
+			case E_NOTICE:
+			case E_USER_NOTICE:
+			case E_DEPRECATED:
+			case E_USER_DEPRECATED:
+			case E_STRICT:
+				Debug::noticeHandler($errno, $errstr, $errfile, $errline, debug_backtrace());
+			break;
+
+			case E_WARNING:
+			case E_CORE_WARNING:
+			case E_USER_WARNING:
+			case E_RECOVERABLE_ERROR:
+				Debug::warningHandler($errno, $errstr, $errfile, $errline, debug_backtrace());
+			break;
+
+			case E_ERROR:
+			case E_CORE_ERROR:
+			case E_USER_ERROR:
+			default:
+				Debug::fatalHandler($errno, $errstr, $errfile, $errline, debug_backtrace());
+				throw new Exception($errstr . " in $errfile at line $errline", $errno);
+			break;
 		}
 	}
 }
