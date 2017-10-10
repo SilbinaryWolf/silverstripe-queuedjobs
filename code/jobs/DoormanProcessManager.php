@@ -1,8 +1,8 @@
 <?php
 
-use AsyncPHP\Doorman\Manager\ProcessManager;
+if (class_exists('AsyncPHP\Doorman\Manager\ProcessManager')) {
 
-class DoormanProcessManager extends ProcessManager
+class DoormanProcessManager extends AsyncPHP\Doorman\Manager\ProcessManager
 {
 	/**
 	 * @inheritdoc
@@ -12,4 +12,6 @@ class DoormanProcessManager extends ProcessManager
 	public function getWorker() {
 		return BASE_PATH . "/framework/cli-script.php dev/tasks/ProcessJobQueueChildTask";
 	}
+}
+
 }

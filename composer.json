@@ -14,11 +14,12 @@
 			"email": "damian@silverstripe.com"
 		}
 	],
-	"require":
-	{
+	"require":{
 		"silverstripe/framework": "~3.1",
-		"symbiote/silverstripe-multivaluefield": "~2.0",
-		"asyncphp/doorman": "~1.2"
+		"symbiote/silverstripe-multivaluefield": "~2.0"
+	},
+	"suggest":{
+		"asyncphp/doorman": "Install to use Doorman for running queuedjobs."
 	},
     "extra": {
         "installer-name": "queuedjobs"

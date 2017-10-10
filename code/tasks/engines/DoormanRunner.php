@@ -1,6 +1,6 @@
 <?php
 
-use AsyncPHP\Doorman\Rule;
+if (class_exists('AsyncPHP\Doorman\Manager\ProcessManager')) {
 
 /**
  * Runs all jobs through the doorman engine
@@ -89,4 +89,6 @@ class DoormanRunner extends BaseRunner implements TaskRunnerEngine {
 			))
 			->first();
 	}
+}
+
 }

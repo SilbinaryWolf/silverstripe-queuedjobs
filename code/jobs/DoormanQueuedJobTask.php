@@ -1,11 +1,8 @@
 <?php
 
-use AsyncPHP\Doorman\Cancellable;
-use AsyncPHP\Doorman\Expires;
-use AsyncPHP\Doorman\Process;
-use AsyncPHP\Doorman\Task;
+if (class_exists('AsyncPHP\Doorman\Manager\ProcessManager')) {
 
-class DoormanQueuedJobTask implements Task, Expires, Process, Cancellable {
+class DoormanQueuedJobTask implements \AsyncPHP\Doorman\Task, AsyncPHP\Doorman\Expires, AsyncPHP\Doorman\Process, AsyncPHP\Doorman\Cancellable {
 	/**
 	 * @var int
 	 */
@@ -187,4 +184,6 @@ class DoormanQueuedJobTask implements Task, Expires, Process, Cancellable {
 		$this->refreshDescriptor();
 		return $this->descriptor->JobStatus === QueuedJob::STATUS_CANCELLED;
 	}
+}
+
 }
